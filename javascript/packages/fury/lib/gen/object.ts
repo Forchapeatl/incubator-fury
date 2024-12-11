@@ -28,7 +28,7 @@ import SerializerResolver from "../classResolver";
 import { FieldInfo, TypeMeta } from "../meta/TypeMeta";
 
 function computeFieldHash(hash: number, id: number): number {
-  let newHash = (hash) * 31 + (id);
+  let newHash = hash * 31 + id;
   while (newHash >= MaxInt32) {
     newHash = Math.floor(newHash / 7);
   }
@@ -38,12 +38,12 @@ function computeFieldHash(hash: number, id: number): number {
 const computeStringHash = (str: string) => {
   const bytes = fromString(str);
   let hash = 17;
-  bytes.forEach((b) => {
+  for (const b of bytes) {
     hash = hash * 31 + b;
     while (hash >= MaxInt32) {
       hash = Math.floor(hash / 7);
     }
-  });
+  }
   return hash;
 };
 
@@ -70,30 +70,24 @@ class ObjectSerializerGenerator extends BaseSerializerGenerator {
   writeStmt(accessor: string): string {
     const options = this.description.options;
     const expectHash = computeStructHash(this.description);
-    // const metaInformation = Buffer.from(computeMetaInformation(this.description));
     const fields = Object.entries(this.description).map(([key, value]) => {
       return new FieldInfo(key, value.type);
     });
-    const typeMetaBinary = new Uint8Array(TypeMeta.fromFields(256, fields).toBytes());
-    const typeMetaDeclare = this.scope.declare("typeMeta", `new Uint8Array([${typeMetaBinary.toString()}])`);
+    const typeMetaBinary = TypeMeta.fromFields(256, fields).toBytes();
+    const typeMetaDeclare = this.scope.declare("typeMeta", `new Uint8Array(${JSON.stringify(Array.from(typeMetaBinary))})`);
 
     return `
       ${this.builder.writer.int32(expectHash)};
-      
-      ${
-        this.builder.fury.config.mode === Mode.Compatible
-          ? this.builder.writer.buffer(typeMetaDeclare)
-          : ""
-      }
-
+      ${this.builder.fury.config.mode === Mode.Compatible ? this.builder.writer.buffer(typeMetaDeclare) : ""}
       ${Object.entries(options.props).sort().map(([key, inner]) => {
         const InnerGeneratorClass = CodegenRegistry.get(inner.type);
         if (!InnerGeneratorClass) {
-            throw new Error(`${inner.type} generator not exists`);
+          throw new Error(`${inner.type} generator not exists`);
         }
         const innerGenerator = new InnerGeneratorClass(inner, this.builder, this.scope);
         return innerGenerator.toWriteEmbed(`${accessor}${CodecBuilder.safePropAccessor(key)}`);
-      }).join(";\n")}
+      }).join(";
+")}
     `;
   }
 
@@ -104,7 +98,7 @@ class ObjectSerializerGenerator extends BaseSerializerGenerator {
 
     return `
       if (${this.builder.reader.int32()} !== ${expectHash}) {
-          throw new Error("got ${this.builder.reader.int32()} validate hash failed: ${this.safeTag()}. expect ${expectHash}");
+        throw new Error(`got ${this.builder.reader.int32()} validate hash failed: ${this.safeTag()}. expect ${expectHash}`);
       }
       const ${result} = {
         ${Object.entries(options.props).sort().map(([key]) => {
@@ -113,11 +107,7 @@ class ObjectSerializerGenerator extends BaseSerializerGenerator {
       };
 
       ${this.maybeReference(result, refState)}
-      ${
-        this.builder.fury.config.mode === Mode.Compatible
-          ? this.builder.typeMeta.fromBytes(this.builder.reader.ownName())
-          : ""
-      }
+      ${this.builder.fury.config.mode === Mode.Compatible ? this.builder.typeMeta.fromBytes(this.builder.reader.ownName()) : ""}
       ${Object.entries(options.props).sort().map(([key, inner]) => {
         const InnerGeneratorClass = CodegenRegistry.get(inner.type);
         if (!InnerGeneratorClass) {
@@ -125,7 +115,8 @@ class ObjectSerializerGenerator extends BaseSerializerGenerator {
         }
         const innerGenerator = new InnerGeneratorClass(inner, this.builder, this.scope);
         return innerGenerator.toReadEmbed(expr => `${result}${CodecBuilder.safePropAccessor(key)} = ${expr}`);
-      }).join(";\n")}
+      }).join(";
+")}
       ${accessor(result)}
     `;
   }
