@@ -9,8 +9,8 @@
  *
  *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
@@ -78,15 +78,17 @@ const uninitSerialize = {
 
 export default class SerializerResolver {
   private internalSerializer: Serializer[] = new Array(300);
-  private customSerializer: { [key: string]: Serializer } = {
-  };
+  private customSerializer: { [key: string]: Serializer } = {};
 
   private readStringPool: LazyString[] = [];
   private writeStringCount = 0;
   private writeStringIndex: number[] = [];
 
   private registerSerializer(fury: Fury, description: TypeDescription) {
-    return fury.classResolver.registerSerializerById(SerializerResolver.getTypeIdByInternalSerializerType(description.type), generateSerializer(fury, description));
+    return fury.classResolver.registerSerializerById(
+      SerializerResolver.getTypeIdByInternalSerializerType(description.type),
+      generateSerializer(fury, description)
+    );
   }
 
   private initInternalSerializer(fury: Fury) {
@@ -116,14 +118,30 @@ export default class SerializerResolver {
     this.registerSerializer(fury, Type.float32Array());
     this.registerSerializer(fury, Type.float64Array());
 
-    this.numberSerializer = this.getSerializerById(SerializerResolver.getTypeIdByInternalSerializerType(InternalSerializerType.FLOAT64));
-    this.int64Serializer = this.getSerializerById(SerializerResolver.getTypeIdByInternalSerializerType(InternalSerializerType.INT64));
-    this.boolSerializer = this.getSerializerById(SerializerResolver.getTypeIdByInternalSerializerType(InternalSerializerType.BOOL));
-    this.dateSerializer = this.getSerializerById(SerializerResolver.getTypeIdByInternalSerializerType(InternalSerializerType.TIMESTAMP));
-    this.stringSerializer = this.getSerializerById(SerializerResolver.getTypeIdByInternalSerializerType(InternalSerializerType.STRING));
-    this.setSerializer = this.getSerializerById(SerializerResolver.getTypeIdByInternalSerializerType(InternalSerializerType.SET));
-    this.arraySerializer = this.getSerializerById(SerializerResolver.getTypeIdByInternalSerializerType(InternalSerializerType.ARRAY));
-    this.mapSerializer = this.getSerializerById(SerializerResolver.getTypeIdByInternalSerializerType(InternalSerializerType.MAP));
+    this.numberSerializer = this.getSerializerById(
+      SerializerResolver.getTypeIdByInternalSerializerType(InternalSerializerType.FLOAT64)
+    );
+    this.int64Serializer = this.getSerializerById(
+      SerializerResolver.getTypeIdByInternalSerializerType(InternalSerializerType.INT64)
+    );
+    this.boolSerializer = this.getSerializerById(
+      SerializerResolver.getTypeIdByInternalSerializerType(InternalSerializerType.BOOL)
+    );
+    this.dateSerializer = this.getSerializerById(
+      SerializerResolver.getTypeIdByInternalSerializerType(InternalSerializerType.TIMESTAMP)
+    );
+    this.stringSerializer = this.getSerializerById(
+      SerializerResolver.getTypeIdByInternalSerializerType(InternalSerializerType.STRING)
+    );
+    this.setSerializer = this.getSerializerById(
+      SerializerResolver.getTypeIdByInternalSerializerType(InternalSerializerType.SET)
+    );
+    this.arraySerializer = this.getSerializerById(
+      SerializerResolver.getTypeIdByInternalSerializerType(InternalSerializerType.ARRAY)
+    );
+    this.mapSerializer = this.getSerializerById(
+      SerializerResolver.getTypeIdByInternalSerializerType(InternalSerializerType.MAP)
+    );
   }
 
   private numberSerializer: null | Serializer = null;
